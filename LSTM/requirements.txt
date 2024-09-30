@@ -7,3 +7,6 @@ neuralforecast
 matplotlib
 torchvision
 torch
+statsmodels
+jpholiday
+pickle
