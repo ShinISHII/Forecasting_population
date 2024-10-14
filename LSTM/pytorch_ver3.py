@@ -211,8 +211,8 @@ from matplotlib import rcParams
 rcParams['font.family'] = 'Noto Sans CJK JP'
 
 # pickleで保存したファイルを読み込み
-pickle_path = '../html/kurashiki/output/warning_list.pickle'
-with open(pickle_path, mode='rb') as fi:
+warning_path = '../html/kurashiki/output/warning_list.pickle'
+with open(warning_path, mode='rb') as fi:
     data = pickle.load(fi)
 
 df_warnings_tmp = data['combined_df']
