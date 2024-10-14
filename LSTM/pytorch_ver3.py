@@ -29,7 +29,7 @@ import os
 # 実行ごとにディレクトリを作成
 start_time = datetime.datetime.now()
 dir_str = start_time.strftime('%Y%m%d-%H%M-%S')   #20240914-1930-00
-directory = f'./pickles/{dir_str}/'
+directory = f'./pickles/{dir_str}-spl/'
 
 # ディレクトリが存在しない場合は作成
 os.makedirs(directory, exist_ok=True)
@@ -91,7 +91,7 @@ for area in df['KEY_CODE']:
     # print(area)
     areas.append(area)
 
-print()
+# print()
 # print(f'{len(areas)} areas in total：{areas}')
 
 # SQLで送信するようにデータを加工
@@ -193,10 +193,10 @@ y_precipitation_normalize = normalize(df_weather['prec'])
 y_windspeed_normalize     = normalize(df_weather['wind'])
 y_temperature_normalize   = normalize(df_weather['temp'])
 
-print(len(y_population_normalize))
-print(len(y_precipitation_normalize))
-print(len(y_windspeed_normalize))
-print(len(y_temperature_normalize))
+# print(len(y_population_normalize))
+# print(len(y_precipitation_normalize))
+# print(len(y_windspeed_normalize))
+# print(len(y_temperature_normalize))
 
 
 # ## Import exogenous data (warnings/advisories)
@@ -454,12 +454,12 @@ df_test = df_ex_standard[true_count:]
 
 n_dim = df_train.shape[1]
 
-print()
-print('df_train')
-print(df_train)
-print()
-print('df_test')
-print(df_test)
+# print()
+# print('df_train')
+# print(df_train)
+# print()
+# print('df_test')
+# print(df_test)
 
 
 # ## Data slice
@@ -494,11 +494,11 @@ for i in range(n_test):
 
 train_labels = train_labels[:, 0]  # 最初の列のみを使用
 
-print(f'train:{train.shape}')
-print(f'train_labels:{train_labels.shape}')
-print()
-print(test.shape)
-print(f'test_labels:{test_labels.shape}')
+# print(f'train:{train.shape}')
+# print(f'train_labels:{train_labels.shape}')
+# print()
+# print(test.shape)
+# print(f'test_labels:{test_labels.shape}')
 
 
 # ## Define LSTM model
@@ -658,7 +658,7 @@ plt.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
 plt.title('Learning Curve') #学習曲線というらしいわ
 graph_loss=f'{directory}result_{dir_str}_loss.png'
 plt.savefig(graph_loss,dpi=300)
-plt.show()
+# plt.show()
 
 
 # # Forecasting
@@ -775,7 +775,7 @@ else:
 plt.title('Forecasted population (Normalization)'+add_title_name+' (LSTM)')
 plt.xlabel('Data number')
 plt.ylabel('population [standard]')
-plt.show()
+# plt.show()
 
 
 # 正規化を戻す

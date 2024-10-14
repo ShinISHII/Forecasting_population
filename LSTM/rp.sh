@@ -10,6 +10,7 @@ do
   # コマンド実行
   echo Repeat: $i
   jupyter execute pytorch_ver3.ipynb
+  # jupyter execute --kernel python3.10.12 pytorch_ver3.ipynb
   sleep 2
 done
 
