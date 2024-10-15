@@ -211,8 +211,8 @@ from matplotlib import rcParams
 rcParams['font.family'] = 'Noto Sans CJK JP'
 
 # pickleで保存したファイルを読み込み
-warning_path = '../html/kurashiki/output/warning_list.pickle'
-with open(warning_path, mode='rb') as fi:
+path_warning = '../html/kurashiki/output/warning_list.pickle'
+with open(path_warning, mode='rb') as fi:
     data = pickle.load(fi)
 
 df_warnings_tmp = data['combined_df']
@@ -408,8 +408,7 @@ from sklearn.model_selection import train_test_split
 import torch
 
 from torch import nn,optim
-from torch.utils.data import DataLoader, TensorDataset, Dataset
-from torchvision import transforms
+from torch.utils.data import DataLoader, TensorDataset
 from torchinfo import summary
 from torch.autograd import Variable
 

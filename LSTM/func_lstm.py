@@ -8,26 +8,26 @@ def func_lstm(train_start_date,
               areas_list,
               path_weather,
               path_warning,
+              directory,
               graphON = False,
               template1=(8, 5),
               window_size=24,
               ):
-
-    import datetime
-    import os
     import pandas as pd
     import psycopg2
     import datetime
     import matplotlib.pyplot as plt
     import pickle
+    import warnings
+    plt.clf()
 
-    # 実行ごとにディレクトリを作成
-    start_time = datetime.datetime.now()
-    dir_str = start_time.strftime('%Y%m%d-%H%M-%S')   #20240914-1930-00
-    directory = f'./pickles/{dir_str}-spl/'
+    # UserWarningの警告を無視する
+    warnings.filterwarnings("ignore", category=UserWarning)
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-    # ディレクトリが存在しない場合は作成
-    os.makedirs(directory, exist_ok=True)
+    from datetime import datetime, timedelta
+    # 計測開始時間
+    cal_time_start= datetime.now()
 
 
 # 日付加工：外部変数を読みたるため
@@ -36,18 +36,8 @@ def func_lstm(train_start_date,
     date_st = train_start_date[0:4]+train_start_date[5:7]+train_start_date[8:10]+train_start_date[11:13]+train_start_date[14:16]
     date_en = test_end_date[0:4]+test_end_date[5:7]+test_end_date[8:10]+test_end_date[11:13]+test_end_date[14:16]
 
-    print(train_start_date,'\t→\t',test_end_date)
-    print(date_st,'\t\t→\t',date_en)
-
-
-
-    #　print用の名前をつけているだけ
-    name_trainPeriod='    Train(\t'+train_start_date[0:10]+'\t→\t'+train_end_date[0:10]+')'
-    print(name_trainPeriod)
-    name_testPeriod='    Test(\t'+test_start_date[0:10]+'\t→\t'+test_end_date[0:10]+')'
-    print(name_testPeriod)
-
-
+    # print(train_start_date,'\t→\t',test_end_date)
+    # print(date_st,'\t\t→\t',date_en)
 
 # データベースの接続情報
     connection_config = {
@@ -76,12 +66,22 @@ def func_lstm(train_start_date,
 
 
     df_pop = pd.read_sql(sql=sql_query, con=connection)
-    # datetime列をdatetime型に変換
+
+    # pd.date_rangeを使用して、指定された期間のすべての時間ステップを含むDataFrameを作成
+    expected_index = pd.date_range(start=train_start_date, end=test_end_date, freq='H')
+    df_expected = pd.DataFrame(index=expected_index)
+
+    # 取得したデータをdatetime列をインデックスに設定してマージ
     df_pop['datetime'] = pd.to_datetime(df_pop['datetime'])
+    df_pop.set_index('datetime', inplace=True)
 
-    # データフレームの表示
-    df_pop
+    # expected_indexを使って、すべての時間が揃うようにmerge（欠損はNaNで埋める）
+    df_pop = df_expected.merge(df_pop, left_index=True, right_index=True, how='left')
 
+    # 欠損値を一つ前の値で埋める（必要に応じて他の方法で埋めることも可能）
+    df_pop['population'].ffill(inplace=True)
+
+    # print(df_pop)
 
     # ## Import exogenous data (weather)
     df_weather_all=pd.read_pickle(path_weather)
@@ -99,6 +99,9 @@ def func_lstm(train_start_date,
     df_warnings = df_warnings_tmp.loc[train_start_date:test_end_date]
 
     timeLine=df_warnings.index
+    # print('timeline')
+    # print(timeLine)
+    # print()
 
     # 日本語フォントを可能にするアイテム
     from matplotlib import rcParams
@@ -111,38 +114,38 @@ def func_lstm(train_start_date,
 
 # 呼び出した外生変数を統合したdataframeを作成
     df_timeLine = pd.DataFrame(timeLine)
-
+    # print(df_timeLine)
     # 他のデータをリセットインデックスで結合
     df_pop_reset = df_pop[['population']].reset_index(drop=True)
     df_weather_reset = df_weather[['prec', 'temp', 'wind']].reset_index(drop=True)
     df_warnings_reset = df_warnings.reset_index(drop=True)
 
+    # print(df_pop_reset,df_weather_reset,df_warnings_reset)
     # 横方向に結合
-    df_ex = pd.concat([df_timeLine, df_pop_reset, df_weather_reset], axis=1)
-    df_ex = pd.concat([df_ex,df_warnings_reset], axis=1)
+    df_ex = pd.concat([df_timeLine, df_pop_reset, df_weather_reset,df_warnings_reset], axis=1)
 
     # 時系列をインデックスに設定
     df_ex = df_ex.set_index('time')
+    # print('df_ex')
+    # print(df_ex)
+    # print()
 
 
-
-    # データの欠損値の補完
-    df_ex['temp'].isna()
-
-
-    # 例: df_trainの作成
-
+# データの欠損値の補完
     for name_var in df_ex.columns:
         nan_locations = df_ex[df_ex[name_var].isna()]
-
-        # NaNが見つかった場合のみ表示
+        # NaNが見つかった場合
         if not nan_locations.empty:
-            print(f"{name_var} のNaNの場所と値:")
-            print(nan_locations)
-            print('データに欠損値あり．注意！！')
+            if not name_var == 'population':
+                # NaNを一つ前のデータで上書きする
+                df_ex.loc[:, name_var] = df_ex[name_var].ffill()
+                print(f"{name_var} の以下にNaN（欠損値）あり！　以下をffillにて修正した:")
+                print(nan_locations)
+                print()
+            else:
+                raise ValueError("Error:人口データの損失が生じた")
 
-            # NaNを一つ前のデータで上書きする
-            df_ex.loc[:, name_var] = df_ex[name_var].ffill()
+
 
 
     # # LSTM
@@ -174,7 +177,6 @@ def func_lstm(train_start_date,
     # testデータの正規化を戻すためのmax,minを抽出
     max_avetem= max(df_ex['population'])
     min_avetem= min(df_ex['population'])
-    max_avetem,min_avetem
 
     # trainのデータ行数を求める．
     array_true_false = df_ex.index < split_date
@@ -187,8 +189,6 @@ def func_lstm(train_start_date,
     df_test = df_ex_standard[true_count:]
 
     n_dim = df_train.shape[1]
-
-
 
 
 # ## Data slice
@@ -305,8 +305,8 @@ def func_lstm(train_start_date,
     n_layers  = num_of_lstm_layer
 
     net = MyLSTM(feature_size, n_hidden, n_layers)
-    print(f'LSTM_layer: {num_of_lstm_layer}')
-    summary(net)
+    # print(f'LSTM_layer: {num_of_lstm_layer}')
+    # summary(net)
 
 
     func_loss = nn.MSELoss()
@@ -315,7 +315,7 @@ def func_lstm(train_start_date,
     loss_history = []
     device = torch.device("cuda:0" if torch.cuda. is_available() else "cpu")
     epochs = epochs
-    print(f'epochs: {epochs}')
+    # print(f'epochs: {epochs}')
     net.to(device)
 
     for i in range(epochs+1):
@@ -332,7 +332,7 @@ def func_lstm(train_start_date,
             tmp_loss += loss.item()
         tmp_loss /= j+1
         loss_history.append(tmp_loss)
-        print('Epoch:', i, ', Loss_Train:', tmp_loss)
+        # print('Epoch:', i, ', Loss_Train:', tmp_loss)
 
     plt.plot(range(len(loss_history)), loss_history, label='train')
     plt.legend()
@@ -347,7 +347,7 @@ def func_lstm(train_start_date,
     plt.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
 
     plt.title('Learning Curve') #学習曲線というらしいわ
-    graph_loss=f'{directory}result_{dir_str}_loss.png'
+    graph_loss=f'{directory}result_loss.png'
     plt.savefig(graph_loss,dpi=300)
 
 
@@ -413,31 +413,23 @@ def func_lstm(train_start_date,
 
     plt.title('Forecasted population' + add_title_name)
     plt.ylabel('Population')
-    graph_forecast = f'{directory}result_{dir_str}_forecast.png'
+    graph_forecast = f'{directory}result_forecast.png'
     plt.savefig(graph_forecast, dpi=300)
 
     if graphON:
         plt.show()
     else:
         plt.close()
-    
-
-# # MAPE/MSE
-
-    import numpy as np
-    # MAPEの計算
-    def calculate_mape(true_values, predicted_values):
-        true_values, predicted_values = np.array(true_values), np.array(predicted_values)
-        return np.mean(np.abs((true_values - predicted_values) / true_values)) * 100
 
 
-    # MSEを計算する関数
-    def calculate_mse(true_values, predicted_values):
-        true_values, predicted_values = np.array(true_values), np.array(predicted_values)
-        return np.mean((true_values - predicted_values) ** 2)
+    # 計測終了時間
+    cal_time_end = datetime.now()
 
-    def calculate_rmse(true_values, predicted_values):
-        return (calculate_mse(true_values, predicted_values) ** 0.5)
+    # 経過時間の計算（分単位で）
+    elapsed_time = cal_time_end - cal_time_start
+    elapsed_minutes = elapsed_time.total_seconds() / 60
 
+    # 結果を出力
+    print(f"\telapsed time: {elapsed_minutes:.2f} min")
 
-    return date_rng,df_test_inversed,predicted_date_rng,predicted_test_plot_inversed
+    return date_rng,df_test_inversed,predicted_date_rng,predicted_test_plot_inversed,
