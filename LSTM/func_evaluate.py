@@ -1,3 +1,5 @@
+import numpy as np
+
 def calculate_mape(true_values, predicted_values):
     true_values, predicted_values = np.array(true_values), np.array(predicted_values)
     return np.mean(np.abs((true_values - predicted_values) / true_values)) * 100

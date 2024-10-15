@@ -399,10 +399,7 @@ def func_lstm(train_start_date,
     # フォーマットを月単位に設定
     formatter = mdates.DateFormatter('%Y-%b-%d')  # 年-月形式で表示
     ax.xaxis.set_major_formatter(formatter)
-
-    # x軸のラベルを90度回転させる
-    ax.tick_params(axis='x', rotation=90)
-
+    
     # 0度のラベルを削除
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
