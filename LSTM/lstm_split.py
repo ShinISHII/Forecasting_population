@@ -7,23 +7,28 @@ import numpy as np
 from func_evaluate import calculate_mape,calculate_mse,calculate_rmse
 import pandas as pd
 import matplotlib.dates as mdates
+import sys
 
 path_weather = '../csv_data/amedas_data/kurashiki/output/weather_exo.pickle'
 path_warning = '../html/kurashiki/output/warning_list.pickle'
 PATH_mesh = '../csv_data/meshID/ID_Kurashiki_Mabicho_shelter.csv'
-# exDataIsAll =  True
-exDataIsAll =  False
+# exDataIsAll         =  True
+# exDataIsAll         =  False
+exDataIsAll         = sys.argv[1] == 'True'
 train_start_date    = '2016-01-01 00:00:00'
 train_end_date      = '2018-06-30 23:59:59'
 test_start_date     = '2018-07-01 00:00:00'
 test_end_date       = '2018-07-11 23:59:59'
 epochs              = 30
 window_size         = 24
-num_of_lstm_layer   = 1
+# num_of_lstm_layer   = 1
+num_of_lstm_layer   = int(sys.argv[2])
 template1           =(8, 5)
 graphON             =True
 ##############################################################################################################
-
+print(f'Exo: {exDataIsAll,type(exDataIsAll)}')
+print(f'Lstm_layers: {num_of_lstm_layer,type(num_of_lstm_layer)}')
+print()
 
 df = pd.read_csv(PATH_mesh)
 areas = []
