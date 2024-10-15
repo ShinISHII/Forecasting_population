@@ -9,8 +9,15 @@ for i in `seq 1 $1`
 do 
   # コマンド実行
   echo Repeat: $i
-  jupyter execute pytorch_ver3.ipynb
-  # jupyter execute --kernel python3.10.12 pytorch_ver3.ipynb
+  jupyter execute lstm_aggregate.ipynb
+  sleep 2
+done
+
+for i in `seq 1 $1`
+do 
+  # コマンド実行
+  echo Repeat: $i
+  python3 lstm_split.py
   sleep 2
 done
 
