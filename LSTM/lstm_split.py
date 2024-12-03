@@ -9,9 +9,12 @@ import pandas as pd
 import matplotlib.dates as mdates
 import sys
 
-path_weather = '../csv_data/amedas_data/kurashiki/output/weather_exo.pickle'
-path_warning = '../html/kurashiki/output/warning_list.pickle'
-PATH_mesh = '../csv_data/meshID/ID_Kurashiki_Mabicho_shelter.csv'
+path_weather    = '../csv_data/amedas_data/kurashiki/output/weather_exo.pickle'
+path_warning    = '../html_warning/kurashiki/output/warning_list.pickle'
+path_mesh       = '../csv_data/meshID/ID_Kurashiki_Mabicho_shelter.csv'
+path_waterLevel = '../html_WL/kurashiki/waterLevel.pickle'
+
+
 # exDataIsAll         =  True
 # exDataIsAll         =  False
 exDataIsAll         = sys.argv[1] == 'True'
@@ -30,7 +33,7 @@ print(f'Exo: {exDataIsAll,type(exDataIsAll)}')
 print(f'Lstm_layers: {num_of_lstm_layer,type(num_of_lstm_layer)}')
 print()
 
-df = pd.read_csv(PATH_mesh)
+df = pd.read_csv(path_mesh)
 areas = []
 for area in df['KEY_CODE']:
     # print(area)
@@ -83,6 +86,7 @@ for idx, id in enumerate(areas_list):
         directory=directory_id,
         path_weather=path_weather,
         path_warning=path_warning,
+        path_waterLevel=path_waterLevel,
         graphON=graphON
     )
 
@@ -212,7 +216,7 @@ File created time: {dir_str}
 {pickle_path}
 
 ## Mesh path
-{PATH_mesh}
+{path_mesh}
 
 ## Imput vars
 

@@ -8,6 +8,7 @@ def func_lstm(train_start_date,
               areas_list,
               path_weather,
               path_warning,
+              path_waterLevel,
               directory,
               graphON = False,
               template1=(8, 5),
@@ -19,6 +20,10 @@ def func_lstm(train_start_date,
     import matplotlib.pyplot as plt
     import pickle
     import warnings
+    # 日本語フォントを可能にするアイテム
+    from matplotlib import rcParams
+    rcParams['font.family'] = 'Noto Sans CJK JP'
+    import matplotlib.dates as mdates
     plt.clf()
 
     # UserWarningの警告を無視する
@@ -81,35 +86,25 @@ def func_lstm(train_start_date,
     # 欠損値を一つ前の値で埋める（必要に応じて他の方法で埋めることも可能）
     df_pop['population'].ffill(inplace=True)
 
-    # print(df_pop)
 
     # ## Import exogenous data (weather)
-    df_weather_all=pd.read_pickle(path_weather)
-    df_weather=df_weather_all[train_start_date:test_end_date]
+    df_weather_tmp=pd.read_pickle(path_weather)
+    df_weather=df_weather_tmp[train_start_date:test_end_date]
 
 
     # ## Import exogenous data (warnings/advisories)
-    # pickleで保存したファイルを読み込み
-    with open(path_warning, mode='rb') as fi:
-        data = pickle.load(fi)
-
-    df_warnings_tmp = data['combined_df']
-
-    # データを指定した期間でフィルタリング
+    df_warnings_tmp = pd.read_pickle(path_warning)
+    df_warnings_tmp = df_warnings_tmp['combined_df']
     df_warnings = df_warnings_tmp.loc[train_start_date:test_end_date]
+
+    # ## Import exogenous data (waterLevel)
+    df_waterLevel_tmp = pd.read_pickle(path_waterLevel)
+    df_waterLevel = df_waterLevel_tmp[train_start_date:test_end_date]
 
     timeLine=df_warnings.index
     # print('timeline')
     # print(timeLine)
     # print()
-
-    # 日本語フォントを可能にするアイテム
-    from matplotlib import rcParams
-    rcParams['font.family'] = 'Noto Sans CJK JP'
-
-    import matplotlib.pyplot as plt
-    import matplotlib.dates as mdates
-
 
 
 # 呼び出した外生変数を統合したdataframeを作成
@@ -119,10 +114,11 @@ def func_lstm(train_start_date,
     df_pop_reset = df_pop[['population']].reset_index(drop=True)
     df_weather_reset = df_weather[['prec', 'temp', 'wind']].reset_index(drop=True)
     df_warnings_reset = df_warnings.reset_index(drop=True)
+    df_waterLevel_reset = df_waterLevel.reset_index(drop=True)
 
     # print(df_pop_reset,df_weather_reset,df_warnings_reset)
     # 横方向に結合
-    df_ex = pd.concat([df_timeLine, df_pop_reset, df_weather_reset,df_warnings_reset], axis=1)
+    df_ex = pd.concat([df_timeLine, df_pop_reset, df_weather_reset,df_warnings_reset,df_waterLevel_reset], axis=1)
 
     # 時系列をインデックスに設定
     df_ex = df_ex.set_index('time')
