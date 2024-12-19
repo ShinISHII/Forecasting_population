@@ -177,14 +177,15 @@ print(full_image[0][1].min(),full_image[0][1].max(), full_image[0][1].mean())
 np.save(proj_dir + 'data/ori_data/input_all.npy', full_image) # lc unnormed, pop normed, ...
 
 # slice the input data
-h_total = full_image.shape[-1]
-w_total = full_image.shape[-2]
+h_total = full_image.shape[-1] #888
+w_total = full_image.shape[-2] #888
 img_size = 256 # how big the tiles should be
 
 
-
+# // means integer division
 x_list = np.linspace(img_size//2, h_total -(img_size//2), num = 10) # Return evenly spaced numbers over a specified interval
 y_list = np.linspace(img_size//2, w_total -(img_size//2), num = 10) # num = w_step, num = 14
+
 new_x_list = []
 new_y_list = []
 
@@ -192,6 +193,7 @@ for i in x_list: # new list for integers
     for j in y_list:
         new_x_list.append(int(i))
         new_y_list.append(int(j))
+# it's like coordinate.
 
 
 sub_img_list = []
